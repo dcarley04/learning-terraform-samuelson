@@ -1,5 +1,6 @@
 # ---------------------------------------------------------------------------
-# AWS EC2 Instance — Bitnami Tomcat (equivalent to Azure Linux VM)
+# AWS EC2 Instance — Bitnami Tomcat Web Server
+# Equivalent Azure resource: azurerm_linux_virtual_machine (see ../azure/main.tf)
 # ---------------------------------------------------------------------------
 data "aws_ami" "app_ami" {
   most_recent = true
@@ -28,7 +29,8 @@ resource "aws_instance" "web" {
 }
 
 # ---------------------------------------------------------------------------
-# AWS S3 Bucket (equivalent to Azure Storage Account + Container)
+# AWS S3 Bucket
+# Equivalent Azure resource: azurerm_storage_account (see ../azure/main.tf)
 # ---------------------------------------------------------------------------
 resource "aws_s3_bucket" "app_bucket" {
   bucket = var.bucket_name

@@ -1,0 +1,104 @@
+# =============================================================================
+# docker-compose.yml — Local stack (alternative to Terraform)
+#
+# Mirrors the resources defined in main.tf:
+#   - tomcat      → docker_container.web       (≈ EC2 / Azure VM)
+#   - minio       → docker_container.minio     (≈ S3 / Azure Storage Account)
+#   - minio-init  → docker_container.minio_init (≈ bucket creation)
+#
+# Usage:
+#   docker compose up -d          # start all services
+#   docker compose down -v        # stop and remove containers + volumes
+#   docker compose logs -f minio  # tail logs for a specific service
+# =============================================================================
+
+services:
+
+  # ---------------------------------------------------------------------------
+  # Tomcat — web application server
+  # Equivalent to: aws_instance (Bitnami Tomcat) / azurerm_linux_virtual_machine
+  # UI: http://localhost:8080
+  # ---------------------------------------------------------------------------
+  tomcat:
+    image: tomcat:10-jre17
+    container_name: tomcat-web-local
+    ports:
+      - "8080:8080"
+    networks:
+      - learning-net
+    restart: unless-stopped
+    labels:
+      environment: local
+      project: learning-terraform
+
+  # ---------------------------------------------------------------------------
+  # MinIO — S3-compatible local object storage
+  # Equivalent to: aws_s3_bucket / azurerm_storage_account
+  # S3 API:  http://localhost:9000
+  # Console: http://localhost:9001  (user: minioadmin / pass: minioadmin)
+  # ---------------------------------------------------------------------------
+  minio:
+    image: minio/minio:latest
+    container_name: minio-storage-local
+    command: server /data --console-address ":9001"
+    ports:
+      - "9000:9000"   # S3-compatible API
+      - "9001:9001"   # Web console
+    volumes:
+      - minio-data:/data
+    environment:
+      MINIO_ROOT_USER: minioadmin
+      MINIO_ROOT_PASSWORD: minioadmin
+    networks:
+      - learning-net
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 15s
+    labels:
+      environment: local
+      project: learning-terraform
+
+  # ---------------------------------------------------------------------------
+  # minio-init — one-shot bucket creation container (exits after setup)
+  # Equivalent to: aws_s3_bucket_versioning + aws_s3_bucket_public_access_block
+  #                / azurerm_storage_container
+  # ---------------------------------------------------------------------------
+  minio-init:
+    image: minio/mc:latest
+    container_name: minio-init-local
+    depends_on:
+      minio:
+        condition: service_healthy
+    entrypoint: >
+      /bin/sh -c "
+        mc alias set minio http://minio:9000 minioadmin minioadmin &&
+        mc mb --ignore-existing minio/app-bucket &&
+        mc version enable minio/app-bucket &&
+        mc anonymous set none minio/app-bucket &&
+        echo 'Bucket app-bucket is ready.'
+      "
+    networks:
+      - learning-net
+    # No restart — this is a one-shot init container
+    restart: "no"
+
+# =============================================================================
+# Networks
+# Equivalent to: AWS VPC / Azure Virtual Network
+# =============================================================================
+networks:
+  learning-net:
+    name: net-learning-local
+    driver: bridge
+
+# =============================================================================
+# Volumes
+# Equivalent to: AWS EBS / Azure Managed Disk
+# =============================================================================
+volumes:
+  minio-data:
+    name: minio-data-local
