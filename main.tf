@@ -1,14 +1,26 @@
-provider "aws" {
-  region = "us-west-1"
-}
 
-# Get latest Amazon Linux 2 AMI (free tier eligible)
-data "aws_ami" "amazon_linux" {
+
+data "aws_ami" "app_ami" {
   most_recent = true
-  owners      = ["amazon"]
 
   filter {
     name   = "name"
-    values = ["amzn2-ami-hvm-*-x86_64-gp2"]
+    values = ["bitnami-tomcat-*-x86_64-hvm-ebs-nami"]
+  }
+
+  filter {
+    name   = "virtualization-type"
+    values = ["hvm"]
+  }
+
+  owners = ["979382823631"] # Bitnami
+}
+
+resource "aws_instance" "web" {
+  ami           = data.aws_ami.app_ami.id
+  instance_type = var.instance_type
+
+  tags = {
+    Name = "HelloWorld"
   }
 }
