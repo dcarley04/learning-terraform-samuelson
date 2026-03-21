@@ -1,7 +1,3 @@
-provider "aws" {
-  region = "us-west-1"
-}
-
 # Get latest Amazon Linux 2 AMI (free tier eligible)
 data "aws_ami" "amazon_linux" {
   most_recent = true
