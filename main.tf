@@ -1,17 +1,8 @@
-terraform {
-  required_providers {
-    aws = {
-      source  = "hashicorp/aws"
-      version = "~> 5.0"
-    }
-  }
-}
-
 provider "aws" {
   region = "us-east-1"
 }
 
-# Use the latest Amazon Linux 2 AMI (free-tier eligible)
+# Free-tier Amazon Linux 2 AMI
 data "aws_ami" "amazon_linux" {
   most_recent = true
   owners      = ["amazon"]
@@ -22,23 +13,13 @@ data "aws_ami" "amazon_linux" {
   }
 }
 
-# Security group allowing HTTP + SSH
+# Allow only HTTP
 resource "aws_security_group" "web_sg" {
-  name        = "webserver-sg"
-  description = "Allow HTTP and SSH"
+  name = "minimal-web-sg"
 
   ingress {
-    description = "HTTP"
     from_port   = 80
     to_port     = 80
-    protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  ingress {
-    description = "SSH"
-    from_port   = 22
-    to_port     = 22
     protocol    = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
   }
@@ -51,30 +32,22 @@ resource "aws_security_group" "web_sg" {
   }
 }
 
-# EC2 instance (free-tier eligible)
+# Single free-tier EC2 instance
 resource "aws_instance" "web" {
   ami           = data.aws_ami.amazon_linux.id
   instance_type = "t2.micro"
 
   vpc_security_group_ids = [aws_security_group.web_sg.id]
 
-  user_data = <<-EOF
-              #!/bin/bash
-              echo "hello world" > /var/www/html/index.html
-              yum install -y httpd
-              systemctl enable httpd
-              systemctl start httpd
-              EOF
-
-  tags = {
-    Name = "hello-world-webserver"
-  }
+  user_data = <<EOF
+#!/bin/bash
+echo "hello world" > /var/www/html/index.html
+yum install -y httpd
+systemctl enable httpd
+systemctl start httpd
+EOF
 }
 
-output "public_ip" {
-  value = aws_instance.web.public_ip
-}
-
-output "website_url" {
+output "url" {
   value = "http://${aws_instance.web.public_ip}"
 }
