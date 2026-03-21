@@ -14,9 +14,9 @@ data "aws_ami" "app_ami" {
   owners = ["979382823631"] # Bitnami
 }
 
-resource "aws_instance" "M8g" {
+resource "aws_instance" "web" {
   ami           = data.aws_ami.app_ami.id
-  instance_type = "t3a.small"
+  instance_type = "t3.micro"
 
   tags = {
     Name = "HelloWorld"
