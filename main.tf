@@ -50,6 +50,11 @@ resource "aws_instance" "blog" {
   }
 }
 
+resource "aws_ec2_instance_state" "blog" {
+  instance_id = aws_instance.blog.id
+  state       = "running"                    # allowed states: stopped|running
+}
+
 module "blog_sg" {
   source          = "terraform-aws-modules/security-group/aws"
   version         = "5.3.1"
