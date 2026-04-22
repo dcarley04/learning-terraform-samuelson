@@ -26,7 +26,7 @@ resource "aws_instance" "web" {
 }
 
 resource "aws_vpc" "default"{
-  default = true # regions default VPC
+  default = true
 }
 
 resource "aws_security_group" "blog" {
