@@ -100,13 +100,13 @@ resource "aws_lb_target_group_attachment" "blog" {
   port             = 80
 }
 
-resource "aws_security_group" "blog" {
-  name        = "blog"
-  description = "Allow http and https in. Allow everything out"
+# resource "aws_security_group" "blog" {
+#   name        = "blog"
+#   description = "Allow http and https in. Allow everything out"
 
-  tags = {
-    terraform = "true"
-  }
+#   tags = {
+#     terraform = "true"
+#   }
 
 #   vpc_id = data.aws_vpc.default.id
 # }
