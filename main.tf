@@ -14,7 +14,7 @@ data "aws_ami" "app_ami" {
   owners = ["137112412989"] # Amazon
 }
 
-resource "aws_instance" "web" {
+resource "aws_instance" "blog" {
   ami           = data.aws_ami.app_ami.id
   instance_type = var.instance_type
   # subnet_id = module.blog_vpc.public_subnets[0]
@@ -54,6 +54,7 @@ version = "5.3.1"
 name   = "blog_new"
 
 vpc_id = data.aws_vpc.blog.id
+# vpc_id = module.blog_vpc.vpc_id
 
 ingress_rules = ["http-80-tcp","https-443-tcp","all-all"]
 ingress_cidr_blocks = ["0.0.0.0/0"]
