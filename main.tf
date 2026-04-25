@@ -50,11 +50,47 @@ name   = "blog_new"
 
 vpc_id = module.blog_vpc.vpc_id
 
-ingress_rules = ["http-80-tcp","https-443-tcp"]
+ingress_rules = ["http-80-tcp","https-443-tcp","all-all"]
 ingress_cidr_blocks = ["0.0.0.0/0"]
 
 egress_rules = ["all-all"]
 egress_cidr_blocks = ["0.0.0.0/0"]
+}
+
+module "blog_alb" {
+  source = "terraform-aws-modules/alb/aws"
+
+  name    = "blog-alb"
+  vpc_id  = module.blog_vpc.vpc_id
+  subnets = module.blog_vpc.public_subnets
+
+  security_groups = [module.blog_sg.security_group_id]
+
+  listeners = {
+    blog-http = {
+      port     = 80
+      protocol = "HTTP"
+      forward = {
+        target_group_arn = aws_lb_target_group.blog.arn
+      }
+    }
+  }
+  tags = {
+    Environment = "Dev"
+  }
+}
+
+resource "aws_lb_target_group" "blog" {
+  name     = "blog-tg"
+  port     = 80
+  protocol = "HTTP"
+  vpc_id   = module.blog_vpc.vpc_id
+}
+
+resource "aws_lb_target_group_attachment" "blog" {
+  target_group_arn = aws_lb_target_group.blog.arn
+  target_id        = aws_instance.blog.id
+  port             = 80
 }
 
 # resource "aws_security_group" "blog" {
