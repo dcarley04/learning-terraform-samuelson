@@ -96,7 +96,7 @@ resource "aws_lb_target_group" "blog" {
 
 resource "aws_lb_target_group_attachment" "blog" {
   target_group_arn = aws_lb_target_group.blog.arn
-  target_id        = aws_instance.web.id
+  target_id        = aws_instance.blog.id
   port             = 80
 }
 
